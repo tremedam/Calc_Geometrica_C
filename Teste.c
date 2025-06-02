@@ -1,172 +1,79 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h> // Para sqrt()
+#include <math.h>
 
-// Define PI para consist�ncia e precis�o
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-const double PI = M_PI;
+#define PI 3.14159265358979323846
+#define LIMPAR_TELA "clear" // Use "cls" para Windows
 
-// Macros para portabilidade
-#ifdef _WIN32
-#include <conio.h> // Para getch() no Windows
-#define LIMPAR_TELA "cls"
-#else
-#define LIMPAR_TELA "clear" 
-#endif
-
-// Função para limpar o buffer de entrada (substitui fflush(stdin))
-void limpar_buffer_entrada() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
-
-// Função para pausar a tela de forma portavel
-void pausar_tela() {
-    printf("\n\n Pressione <ENTER> para retornar ao menu.");
-#ifdef _WIN32
-    getch();
-#else
-    getchar(); 
-#endif
-}
-
-// Funcao para ler um inteiro de forma segura
-int ler_int(const char *prompt) {
-    int valor;
-    int resultado_scanf;
-    do {
-        printf("%s", prompt);
-        resultado_scanf = scanf("%d", &valor);
-        limpar_buffer_entrada(); 
-        if (resultado_scanf != 1) {
-            printf("Entrada invalida. Por favor, digite um numero inteiro.\n");
-        }
-    } while (resultado_scanf != 1);
-    return valor;
-}
-
-// Função para ler um inteiro positivo de forma segura (usado para altura do desenho)
-int ler_int_positivo(const char *prompt) {
-    int valor;
-    int resultado_scanf;
-    do {
-        printf("%s", prompt);
-        resultado_scanf = scanf("%d", &valor);
-        limpar_buffer_entrada();
-        if (resultado_scanf != 1) {
-            printf("Entrada invalida. Por favor, digite um numero inteiro.\n");
-        } else if (valor <= 0) {
-            printf("Entrada invalida. O valor deve ser positivo.\n");
-            resultado_scanf = 0; // Forca o loop a continuar
-        }
-    } while (resultado_scanf != 1);
-    return valor;
-}
-
-
-// Fun��o para ler um float de forma segura
-float ler_float(const char *prompt) {
+// Função genérica para ler número (inteiro ou float, positivo ou não)
+float ler_numero(const char *prompt, int inteiro, int positivo) {
     float valor;
-    int resultado_scanf;
+    int valido;
     do {
         printf("%s", prompt);
-        resultado_scanf = scanf("%f", &valor);
-        limpar_buffer_entrada();
-        if (resultado_scanf != 1) {
-            printf("Entrada invalida. Por favor, digite um numero.\n");
+        valido = inteiro ? scanf("%d", (int*)&valor) : scanf("%f", &valor);
+        while (getchar() != '\n'); // Limpar buffer
+        if (valido != 1) printf("Entrada inválida. Digite um número.\n");
+        else if (positivo && valor <= 0) {
+            printf("Entrada inválida. O valor deve ser positivo.\n");
+            valido = 0;
         }
-    } while (resultado_scanf != 1);
+    } while (valido != 1);
     return valor;
 }
 
-// Fun��o para ler um float positivo de forma segura
-float ler_float_positivo(const char *prompt) {
-    float valor;
-    int resultado_scanf;
-    do {
-        printf("%s", prompt);
-        resultado_scanf = scanf("%f", &valor);
-        limpar_buffer_entrada();
-        if (resultado_scanf != 1) {
-            printf("Entrada invalida. Por favor, digite um numero.\n");
-        } else if (valor <= 0) {
-            printf("Entrada invalida. O valor deve ser positivo.\n");
-            resultado_scanf = 0; // For�a o loop a continuar
-        }
-    } while (resultado_scanf != 1);
-    return valor;
+// Função para pausar a tela
+void pausar() {
+    printf("\nPressione <ENTER> para continuar.");
+    getchar();
 }
 
+// Função para exibir título
+void titulo(const char *texto) {
+    printf("\n=== %s ===\n\n", texto);
+}
 
-// --- FUN��ES DE C�LCULO ---
-float circulo_area(float dia) { float r = dia / 2.0f; return (float)(PI * r * r); }
-float losango_area(float D1, float D2) { return (D1 * D2) / 2.0f; }
+// Funções de cálculo de área
+float circulo_area(float dia) { return PI * pow(dia / 2.0f, 2); }
+float losango_area(float d1, float d2) { return (d1 * d2) / 2.0f; }
 float paralelogramo_area(float base, float alt) { return base * alt; }
 float trapezio_area(float B_maior, float b_menor, float alt) { return ((B_maior + b_menor) / 2.0f) * alt; }
-float tri_equi_area(float lado) { return (float)((lado * lado * sqrt(3.0)) / 4.0); }
-float triangulo_lados_area(float a, float b, float c) { if (a + b <= c || a + c <= b || b + c <= a) { return -1.0f; } float s = (a + b + c) / 2.0f; return (float)sqrt(s * (s - a) * (s - b) * (s - c)); }
-float esfera_vol(float dia) { float r = dia / 2.0f; return (float)((4.0 / 3.0) * PI * r * r * r); }
-float cone_vol(float dia_base, float alt) { float r_base = dia_base / 2.0f; return (float)((PI / 3.0) * r_base * r_base * alt); }
-float cilindro_vol(float dia_base, float alt) { float r_base = dia_base / 2.0f; return (float)(PI * r_base * r_base * alt); }
+float triangulo_area(float a, float b, float c) {
+    if (a + b <= c || a + c <= b || b + c <= a) return -1.0f;
+    float s = (a + b + c) / 2.0f;
+    return sqrt(s * (s - a) * (s - b) * (s - c));
+}
+
+// Funções de cálculo de volume
+float esfera_vol(float dia) { return (4.0 / 3.0) * PI * pow(dia / 2.0f, 3); }
+float cone_vol(float dia, float alt) { return (PI / 3.0) * pow(dia / 2.0f, 2) * alt; }
+float cilindro_vol(float dia, float alt) { return PI * pow(dia / 2.0f, 2) * alt; }
 float paralelepipedo_vol(float comp, float larg, float alt) { return comp * larg * alt; }
 
-// --- FUN��ES DE CONVERS�O ---
-float metros_para_jardas(float num) { return num * 1.09361f; }
-float jardas_para_metros(float num) { return num / 1.09361f; }
-float cm3_para_pol3(float num) { return num / 16.387064f; }
-float pol3_para_cm3(float num) { return num * 16.387064f; }
-float litros_para_galoes(float num) { return num * 0.264172f; } 
-float galoes_para_litros(float num) { return num / 0.264172f; } 
-float kg_para_libras(float num) { return num * 2.20462262f; }
-float libras_para_kg(float num) { return num / 2.20462262f; }
+// Funções de conversão
+float metros_para_jardas(float m) { return m * 1.09361f; }
+float jardas_para_metros(float yd) { return yd / 1.09361f; }
+float cm3_para_pol3(float cm3) { return cm3 / 16.387064f; }
+float pol3_para_cm3(float in3) { return in3 * 16.387064f; }
+float litros_para_galoes(float l) { return l * 0.264172f; }
+float galoes_para_litros(float gal) { return gal / 0.264172f; }
+float kg_para_libras(float kg) { return kg * 2.20462262f; }
+float libras_para_kg(float lb) { return lb / 2.20462262f; }
 
-// --- FUN��O PARA DESENHAR FIGURAS ---
-void desenhar_triangulo_isoceles_oco(int altura) {
-    int i, j;
-    // Parte superior do tri�ngulo (todas as linhas exceto a base)
-    for (i = 1; i < altura; i++) {
-        // Espa�amento lateral para centraliza��o
-        for (j = 0; j < altura - i; j++) {
-            printf(" ");
-        }
-        // Borda esquerda
+// Função para desenhar triângulo isósceles oco
+void desenhar_triangulo(int altura) {
+    for (int i = 1; i < altura; i++) {
+        for (int j = 0; j < altura - i; j++) printf(" ");
         printf("/");
-        // Espa�amento interno oco
-        for (j = 0; j < 2*(i-1); j++) {
-            printf(" ");
-        }
-        // Borda direita - CORRIGIDO: Removida a condicaoo "if (i > 1)"
-        // para que a barra direita seja impressa em todas as linhas do topo
-        // (exceto quando i=1 e altura=1, caso em que este loop n�o roda e a base trata)
-        printf("\\"); 
-        printf("\n");
+        for (int j = 0; j < 2 * (i - 1); j++) printf(" ");
+        printf("\\\n");
     }
-    // Linha da base
-    if (altura >= 1) { 
-        // Para altura = 1, o loop superior n�o roda.
-        // Esta se��o da base imprimir� "/\" para altura = 1.
-        printf("/");
-        for (j = 0; j < 2*(altura-1); j++) { 
-            printf("_");
-        }
-        printf("\\\n"); 
-    }
+    printf("/");
+    for (int j = 0; j < 2 * (altura - 1); j++) printf("_");
+    printf("\\\n");
 }
 
-void titulo (const char *titulo) {
-    int i;
-    for(i = 0; i < 80; i++) {
-        printf("-");
-    }
-    printf("\n\n\t\t********** %s **********\n\n", titulo);
-    for(i = 0; i < 80; i++) {
-        printf("-");
-    }
-}
-
-// --- FUN��O PRINCIPAL ---
+// Função para submenu de áreas
 void menu_area(int opcao) {
     float a, b, c, area;
     switch (opcao) {
