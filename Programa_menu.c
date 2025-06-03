@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
+#include <conio.h>
 #include <math.h> // Para sqrt()
 
 // Define PI para consistencia e precisao
@@ -10,7 +12,6 @@ const double PI = M_PI;
 
 // Macros para portabilidade
 #ifdef _WIN32
-#include <conio.h> // Para getch() no Windows
 #define LIMPAR_TELA "cls"
 #else
 #define LIMPAR_TELA "clear" 
@@ -164,6 +165,7 @@ void titulo (const char *titulo) {
     for(i = 0; i < 80; i++) {
         printf("-");
     }
+    printf("\n");
 }
 
 // --- FUNCAO PRINCIPAL ---
@@ -313,6 +315,7 @@ void submenu(const char *titulo_menu, const char *opcoes[], int num_opcoes, void
 
 // Função principal
 int main() {
+    setlocale(LC_ALL, ""); // usa a localidade do sistema padrão
     const char *menu_principal[] = {
         "1 - Calcular área de figuras planas",
         "2 - Calcular volume de sólidos geométricos",
@@ -320,22 +323,22 @@ int main() {
         "4 - Desenhar figuras",
         "0 - Sair"
     };
-    const char *menu_area[] = {
+    const char *opcoes_area[] = {
         "1 - Círculo", "2 - Losango", "3 - Paralelogramo",
         "4 - Trapézio", "5 - Triângulo", "0 - Retornar"
     };
-    const char *menu_volume[] = {
+    const char *opcoes_volume[] = {
         "1 - Esfera", "2 - Cone Circular", "3 - Cilindro",
         "4 - Paralelepípedo", "0 - Retornar"
     };
-    const char *menu_conversao[] = {
+    const char *opcoes_conversao[] = {
         "1 - Metros para Jardas", "2 - Jardas para Metros",
         "3 - Cm³ para Pol³", "4 - Pol³ para Cm³",
         "5 - Litros para Galões", "6 - Galões para Litros",
         "7 - Quilogramas para Libras", "8 - Libras para Quilogramas",
         "0 - Retornar"
     };
-    const char *menu_desenho[] = {
+    const char *opcoes_desenho[] = {
         "1 - Triângulo Isósceles Oco", "0 - Retornar"
     };
 
@@ -347,10 +350,10 @@ int main() {
         opcao = ler_int("Opção: ");
         system(LIMPAR_TELA);
         switch (opcao) {
-            case 1: submenu("Área de Figuras Planas", menu_area, 5, menu_area); break;
-            case 2: submenu("Volume de Sólidos Geométricos", menu_volume, 5, menu_volume); break;
-            case 3: submenu("Conversão de Medidas", menu_conversao, 9, menu_conversao); break;
-            case 4: submenu("Desenhar Figuras", menu_desenho, 2, menu_desenho); break;
+            case 1: submenu("Área de Figuras Planas", opcoes_area, 6, menu_area); break;
+            case 2: submenu("Volume de Sólidos Geométricos", opcoes_volume, 5, menu_volume); break;
+            case 3: submenu("Conversão de Medidas", opcoes_conversao, 9, menu_conversao); break;
+            case 4: submenu("Desenhar Figuras", opcoes_desenho, 2, menu_desenho); break;
             case 0: printf("Saindo...\n"); break;
             default: printf("Opção inválida.\n"); pausar_tela();
         }
