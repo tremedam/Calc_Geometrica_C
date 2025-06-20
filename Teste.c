@@ -1,266 +1,181 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include <locale.h>
 
 #define PI 3.14159265358979323846
-#define LIMPAR_TELA "clear" // Use "cls" para Windows
 
-// Função genérica para ler número (inteiro ou float, positivo ou não)
-float ler_numero(const char *prompt, int inteiro, int positivo) {
-    float valor;
-    int valido;
+#ifdef _WIN32
+#define LIMPAR_TELA "cls"
+#else
+#define LIMPAR_TELA "clear"
+#endif
+
+void limpar_buffer() { while(getchar()!='\n'); }
+void pausar() { printf("\nPressione <ENTER> para retornar ao menu."); limpar_buffer(); }
+
+float ler_num(const char *msg, int positivo) {
+    float v; int ok;
     do {
-        printf("%s", prompt);
-        valido = inteiro ? scanf("%d", (int*)&valor) : scanf("%f", &valor);
-        while (getchar() != '\n'); // Limpar buffer
-        if (valido != 1) printf("Entrada inválida. Digite um número.\n");
-        else if (positivo && valor <= 0) {
-            printf("Entrada inválida. O valor deve ser positivo.\n");
-            valido = 0;
-        }
-    } while (valido != 1);
-    return valor;
+        printf("%s", msg);
+        ok = scanf("%f", &v); limpar_buffer();
+        if (ok!=1 || (positivo && v<=0))
+            printf("Entrada invalida. Digite um numero%s.\n", positivo?" positivo":"");
+    } while(ok!=1 || (positivo && v<=0));
+    return v;
 }
 
-// Função para pausar a tela
-void pausar() {
-    printf("\nPressione <ENTER> para continuar.");
-    getchar();
+typedef float (*calc_func)(float, float, float);
+
+float area_circulo(float a, float b, float c) { float r=a/2; return PI*r*r; }
+float area_losango(float a, float b, float c) { return (a*b)/2; }
+float area_paralelogramo(float a, float b, float c) { return a*b; }
+float area_trapezio(float a, float b, float c) { return ((a+b)/2)*c; }
+float area_triangulo(float a, float b, float c) {
+    if(a+b<=c||a+c<=b||b+c<=a) return -1;
+    float s=(a+b+c)/2;
+    return sqrt(s*(s-a)*(s-b)*(s-c));
 }
+float vol_esfera(float a, float b, float c) { float r=a/2; return (4.0/3.0)*PI*r*r*r; }
+float vol_cone(float a, float b, float c) { float r=a/2; return (PI/3.0)*r*r*b; }
+float vol_cilindro(float a, float b, float c) { float r=a/2; return PI*r*r*b; }
+float vol_paralelepipedo(float a, float b, float c) { return a*b*c; }
 
-// Função para exibir título
-void titulo(const char *texto) {
-    printf("\n=== %s ===\n\n", texto);
-}
+float m2y(float n, float b, float c) { return n*1.09361f; }
+float y2m(float n, float b, float c) { return n/1.09361f; }
+float cm32in3(float n, float b, float c) { return n/16.387064f; }
+float in32cm3(float n, float b, float c) { return n*16.387064f; }
+float l2gal(float n, float b, float c) { return n*0.264172f; }
+float gal2l(float n, float b, float c) { return n/0.264172f; }
+float kg2lb(float n, float b, float c) { return n*2.20462262f; }
+float lb2kg(float n, float b, float c) { return n/2.20462262f; }
 
-// Funções de cálculo de área
-float circulo_area(float dia) { return PI * pow(dia / 2.0f, 2); }
-float losango_area(float d1, float d2) { return (d1 * d2) / 2.0f; }
-float paralelogramo_area(float base, float alt) { return base * alt; }
-float trapezio_area(float B_maior, float b_menor, float alt) { return ((B_maior + b_menor) / 2.0f) * alt; }
-float triangulo_area(float a, float b, float c) {
-    if (a + b <= c || a + c <= b || b + c <= a) return -1.0f;
-    float s = (a + b + c) / 2.0f;
-    return sqrt(s * (s - a) * (s - b) * (s - c));
-}
-
-// Funções de cálculo de volume
-float esfera_vol(float dia) { return (4.0 / 3.0) * PI * pow(dia / 2.0f, 3); }
-float cone_vol(float dia, float alt) { return (PI / 3.0) * pow(dia / 2.0f, 2) * alt; }
-float cilindro_vol(float dia, float alt) { return PI * pow(dia / 2.0f, 2) * alt; }
-float paralelepipedo_vol(float comp, float larg, float alt) { return comp * larg * alt; }
-
-// Funções de conversão
-float metros_para_jardas(float m) { return m * 1.09361f; }
-float jardas_para_metros(float yd) { return yd / 1.09361f; }
-float cm3_para_pol3(float cm3) { return cm3 / 16.387064f; }
-float pol3_para_cm3(float in3) { return in3 * 16.387064f; }
-float litros_para_galoes(float l) { return l * 0.264172f; }
-float galoes_para_litros(float gal) { return gal / 0.264172f; }
-float kg_para_libras(float kg) { return kg * 2.20462262f; }
-float libras_para_kg(float lb) { return lb / 2.20462262f; }
-
-// Função para desenhar triângulo isósceles oco
-void desenhar_triangulo(int altura) {
-    for (int i = 1; i < altura; i++) {
-        for (int j = 0; j < altura - i; j++) printf(" ");
+void desenhar_triangulo(int h) {
+    for(int i=1;i<h;i++) {
+        for(int j=0;j<h-i;j++) printf(" ");
         printf("/");
-        for (int j = 0; j < 2 * (i - 1); j++) printf(" ");
+        for(int j=0;j<2*(i-1);j++) printf(" ");
         printf("\\\n");
     }
-    printf("/");
-    for (int j = 0; j < 2 * (altura - 1); j++) printf("_");
-    printf("\\\n");
-}
-
-// Função para submenu de áreas
-void menu_area(int opcao) {
-    float a, b, c, area;
-    switch (opcao) {
-        case 1: // Círculo
-            titulo("Área do Círculo");
-            a = ler_numero("Diâmetro: ", 0, 1);
-            area = circulo_area(a);
-            printf("Área: %.2f\n", area);
-            break;
-        case 2: // Losango
-            titulo("Área do Losango");
-            a = ler_numero("Diagonal 1: ", 0, 1);
-            b = ler_numero("Diagonal 2: ", 0, 1);
-            area = losango_area(a, b);
-            printf("Área: %.2f\n", area);
-            break;
-        case 3: // Paralelogramo
-            titulo("Área do Paralelogramo");
-            a = ler_numero("Base: ", 0, 1);
-            b = ler_numero("Altura: ", 0, 1);
-            area = paralelogramo_area(a, b);
-            printf("Área: %.2f\n", area);
-            break;
-        case 4: // Trapézio
-            titulo("Área do Trapézio");
-            a = ler_numero("Base maior: ", 0, 1);
-            b = ler_numero("Base menor: ", 0, 1);
-            if (b >= a) {
-                printf("Erro: Base menor deve ser menor que a base maior.\n");
-                break;
-            }
-            c = ler_numero("Altura: ", 0, 1);
-            area = trapezio_area(a, b, c);
-            printf("Área: %.2f\n", area);
-            break;
-        case 5: // Triângulo
-            titulo("Área do Triângulo");
-            a = ler_numero("Lado A: ", 0, 1);
-            b = ler_numero("Lado B: ", 0, 1);
-            c = ler_numero("Lado C: ", 0, 1);
-            area = triangulo_area(a, b, c);
-            if (area < 0) printf("Triângulo inválido.\n");
-            else printf("%s >>> Área: %.2f\n", (a == b && b == c) ? "Triângulo Equilátero" :
-                        (a == b || b == c || a == c) ? "Triângulo Isósceles" : "Triângulo Escaleno", area);
-            break;
-        case 0: return;
-        default: printf("Opção inválida.\n");
+    if(h>=1) {
+        printf("/");
+        for(int j=0;j<2*(h-1);j++) printf("_");
+        printf("\\\n");
     }
-    pausar();
 }
-
-// Função para submenu de volumes
-void menu_volume(int opcao) {
-    float a, b, c, vol;
-    switch (opcao) {
-        case 1: // Esfera
-            titulo("Volume da Esfera");
-            a = ler_numero("Diâmetro: ", 0, 1);
-            vol = esfera_vol(a);
-            printf("Volume: %.2f\n", vol);
-            break;
-        case 2: // Cone
-            titulo("Volume do Cone");
-            a = ler_numero("Diâmetro da base: ", 0, 1);
-            b = ler_numero("Altura: ", 0, 1);
-            vol = cone_vol(a, b);
-            printf("Volume: %.2f\n", vol);
-            break;
-        case 3: // Cilindro
-            titulo("Volume do Cilindro");
-            a = ler_numero("Diâmetro: ", 0, 1);
-            b = ler_numero("Altura: ", 0, 1);
-            vol = cilindro_vol(a, b);
-            printf("Volume: %.2f\n", vol);
-            break;
-        case 4: // Paralelepípedo
-            titulo("Volume do Paralelepípedo");
-            a = ler_numero("Comprimento: ", 0, 1);
-            b = ler_numero("Largura: ", 0, 1);
-            c = ler_numero("Altura: ", 0, 1);
-            vol = paralelepipedo_vol(a, b, c);
-            printf("Volume: %.2f\n", vol);
-            break;
-        case 0: return;
-        default: printf("Opção inválida.\n");
+void desenhar_quadrado(int l) {
+    for(int i=0;i<l;i++) {
+        for(int j=0;j<l;j++)
+            printf((i==0||i==l-1||j==0||j==l-1)?"**":"  ");
+        printf("\n");
     }
-    pausar();
 }
-
-// Função para submenu de conversões
-void menu_conversao(int opcao) {
-    float num, result;
-    const char *unidades[][2] = {
-        {"Metros para Jardas", "%.2f m = %.2f yd"},
-        {"Jardas para Metros", "%.2f yd = %.2f m"},
-        {"Cm³ para Pol³", "%.2f cm³ = %.4f in³"},
-        {"Pol³ para Cm³", "%.4f in³ = %.2f cm³"},
-        {"Litros para Galões", "%.2f L = %.4f gal"},
-        {"Galões para Litros", "%.4f gal = %.2f L"},
-        {"Quilogramas para Libras", "%.2f kg = %.2f lb"},
-        {"Libras para Quilogramas", "%.2f lb = %.2f kg"}
-    };
-    float (*funcoes[])(float) = {
-        metros_para_jardas, jardas_para_metros, cm3_para_pol3, pol3_para_cm3,
-        litros_para_galoes, galoes_para_litros, kg_para_libras, libras_para_kg
-    };
-    if (opcao >= 1 && opcao <= 8) {
-        titulo(unidades[opcao-1][0]);
-        num = ler_numero("Valor: ", 0, 0);
-        result = funcoes[opcao-1](num);
-        printf(unidades[opcao-1][1], num, result);
-        pausar();
-    } else if (opcao != 0) {
-        printf("Opção inválida.\n");
-        pausar();
+void desenhar_circulo(int r) {
+    for(int y=-r;y<=r;y++) {
+        for(int x=-r;x<=r;x++) {
+            float d=sqrt((x*x*4)+(y*y));
+            printf((d>=r*2-1&&d<=r*2+1)?"* ":"  ");
+        }
+        printf("\n");
     }
 }
 
-// Função para submenu de desenho
-void menu_desenho(int opcao) {
-    if (opcao == 1) {
-        titulo("Triângulo Isósceles Oco");
-        int altura = ler_numero("Altura: ", 1, 1);
-        desenhar_triangulo(altura);
-        pausar();
-    } else if (opcao != 0) {
-        printf("Opção inválida.\n");
-        pausar();
-    }
+typedef struct { const char *nome; calc_func func; int args; } ItemMenu;
+
+ItemMenu areas[] = {
+    {"Circulo", area_circulo, 1},
+    {"Losango", area_losango, 2},
+    {"Paralelogramo", area_paralelogramo, 2},
+    {"Trapezio", area_trapezio, 3},
+    {"Triangulo", area_triangulo, 3}
+};
+ItemMenu volumes[] = {
+    {"Esfera", vol_esfera, 1},
+    {"Cone Circular", vol_cone, 2},
+    {"Cilindro", vol_cilindro, 2},
+    {"Paralelepipedo", vol_paralelepipedo, 3}
+};
+ItemMenu conversoes[] = {
+    {"Metros para Jardas", m2y, 1},
+    {"Jardas para Metros", y2m, 1},
+    {"Cm3 para Pol3", cm32in3, 1},
+    {"Pol3 para Cm3", in32cm3, 1},
+    {"Litros para Galoes", l2gal, 1},
+    {"Galoes para Litros", gal2l, 1},
+    {"Quilogramas para Libras", kg2lb, 1},
+    {"Libras para Quilogramas", lb2kg, 1}
+};
+
+void titulo(const char *t) {
+    for(int i=0;i<60;i++) printf("-");
+    printf("\n\n\t*** %s ***\n\n", t);
+    for(int i=0;i<60;i++) printf("-");
+    printf("\n");
 }
 
-// Função genérica para submenu
-void submenu(const char *titulo_menu, const char *opcoes[], int num_opcoes, void (*funcao)(int)) {
-    int opcao;
+void menu_generico(ItemMenu *itens, int n, const char *tipo) {
+    int op;
     do {
         system(LIMPAR_TELA);
-        titulo(titulo_menu);
-        for (int i = 0; i < num_opcoes; i++) printf("%s\n", opcoes[i]);
-        opcao = ler_numero("Opção: ", 1, 0);
-        system(LIMPAR_TELA);
-        funcao(opcao);
-    } while (opcao != 0);
+        titulo(tipo);
+        for(int i=0;i<n;i++) printf("%d - %s\n", i+1, itens[i].nome);
+        printf("0 - Retornar\nOpcao: ");
+        scanf("%d", &op); limpar_buffer();
+        if(op>0 && op<=n) {
+            float a=0,b=0,c=0, res;
+            if(itens[op-1].args>0) a=ler_num("Primeiro valor: ",1);
+            if(itens[op-1].args>1) b=ler_num("Segundo valor: ",1);
+            if(itens[op-1].args>2) c=ler_num("Terceiro valor: ",1);
+            res = itens[op-1].func(a,b,c);
+            if(strcmp(tipo,"Area de Figuras Planas")==0 && op==5 && res<0)
+                printf("Triangulo invalido.\n");
+            else
+                printf("Resultado: %.4f\n", res);
+            pausar();
+        }
+    } while(op!=0);
 }
 
-// Função principal
-int main() {
-    const char *menu_principal[] = {
-        "1 - Calcular área de figuras planas",
-        "2 - Calcular volume de sólidos geométricos",
-        "3 - Conversão de medidas",
-        "4 - Desenhar figuras",
-        "0 - Sair"
-    };
-    const char *menu_area[] = {
-        "1 - Círculo", "2 - Losango", "3 - Paralelogramo",
-        "4 - Trapézio", "5 - Triângulo", "0 - Retornar"
-    };
-    const char *menu_volume[] = {
-        "1 - Esfera", "2 - Cone Circular", "3 - Cilindro",
-        "4 - Paralelepípedo", "0 - Retornar"
-    };
-    const char *menu_conversao[] = {
-        "1 - Metros para Jardas", "2 - Jardas para Metros",
-        "3 - Cm³ para Pol³", "4 - Pol³ para Cm³",
-        "5 - Litros para Galões", "6 - Galões para Litros",
-        "7 - Quilogramas para Libras", "8 - Libras para Quilogramas",
-        "0 - Retornar"
-    };
-    const char *menu_desenho[] = {
-        "1 - Triângulo Isósceles Oco", "0 - Retornar"
-    };
+void menu_desenho() {
+    int op;
+    do {
+        system(LIMPAR_TELA);
+        titulo("Desenhar Figuras");
+        printf("1 - Triangulo Isosceles Oco\n2 - Quadrado Oco\n3 - Circulo Oco\n0 - Retornar\nOpcao: ");
+        scanf("%d",&op); limpar_buffer();
+        if(op==1) {
+            int h=ler_num("Altura: ",1);
+            desenhar_triangulo(h);
+            pausar();
+        } else if(op==2) {
+            int l=ler_num("Lado: ",1);
+            desenhar_quadrado(l);
+            pausar();
+        } else if(op==3) {
+            int r=ler_num("Raio: ",1);
+            desenhar_circulo(r);
+            pausar();
+        }
+    } while(op!=0);
+}
 
-    int opcao;
+int main() {
+    setlocale(LC_ALL,"");
+    int op;
     do {
         system(LIMPAR_TELA);
         titulo("MENU PRINCIPAL");
-        for (int i = 0; i < 5; i++) printf("%s\n", menu_principal[i]);
-        opcao = ler_numero("Opção: ", 1, 0);
-        system(LIMPAR_TELA);
-        switch (opcao) {
-            case 1: submenu("Área de Figuras Planas", menu_area, 6, menu_area); break;
-            case 2: submenu("Volume de Sólidos Geométricos", menu_volume, 5, menu_volume); break;
-            case 3: submenu("Conversão de Medidas", menu_conversao, 9, menu_conversao); break;
-            case 4: submenu("Desenhar Figuras", menu_desenho, 2, menu_desenho); break;
-            case 0: printf("Saindo...\n"); break;
-            default: printf("Opção inválida.\n"); pausar();
-        }
-    } while (opcao != 0);
+        printf("1 - Calcular area de figuras planas\n");
+        printf("2 - Calcular volume de solidos geometricos\n");
+        printf("3 - Conversao de medidas\n");
+        printf("4 - Desenhar figuras\n");
+        printf("0 - Sair\nOpcao: ");
+        scanf("%d",&op); limpar_buffer();
+        if(op==1) menu_generico(areas, sizeof(areas)/sizeof(ItemMenu), "Area de Figuras Planas");
+        else if(op==2) menu_generico(volumes, sizeof(volumes)/sizeof(ItemMenu), "Volume de Solidos Geometricos");
+        else if(op==3) menu_generico(conversoes, sizeof(conversoes)/sizeof(ItemMenu), "Conversao de Medidas");
+        else if(op==4) menu_desenho();
+    } while(op!=0);
     return 0;
 }

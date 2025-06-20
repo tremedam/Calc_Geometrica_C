@@ -18,7 +18,6 @@ const double PI = M_PI;
 #endif
 
 // ==================== UTILITARIOS ====================
-
 void limpar_buffer_entrada() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -92,7 +91,6 @@ float ler_float_positivo(const char *prompt) {
 }
 
 // ==================== CALCULOS GEOMETRICOS ====================
-
 float circulo_area(float dia) { float r = dia / 2.0f; return (float)(PI * r * r); }
 float losango_area(float D1, float D2) { return (D1 * D2) / 2.0f; }
 float paralelogramo_area(float base, float alt) { return base * alt; }
