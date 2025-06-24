@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <conio.h>
+#include <conio.h> // conio.h é específico do Windows, considere alternativa getchar() para portabilidade máxima
 #include <math.h>
 
 // Definicao de PI para precisao
@@ -32,59 +32,35 @@ void pausar_tela() {
 #endif
 }
 
-int ler_int(const char *prompt) {
+// Funções de leitura consolidadas
+int ler_int(const char *prompt, int deve_ser_positivo) {
     int valor, resultado_scanf;
     do {
         printf("%s", prompt);
         resultado_scanf = scanf("%d", &valor);
         limpar_buffer_entrada();
-        if (resultado_scanf != 1)
+        if (resultado_scanf != 1) {
             printf("Entrada invalida. Por favor, digite um numero inteiro.\n");
-    } while (resultado_scanf != 1);
-    return valor;
-}
-
-int ler_int_positivo(const char *prompt) {
-    int valor, resultado_scanf;
-    do {
-        printf("%s", prompt);
-        resultado_scanf = scanf("%d", &valor);
-        limpar_buffer_entrada();
-        if (resultado_scanf != 1)
-            printf("Entrada invalida. Por favor, digite um numero inteiro.\n");
-        else if (valor <= 0) {
+        } else if (deve_ser_positivo && valor <= 0) {
             printf("Entrada invalida. O valor deve ser positivo.\n");
-            resultado_scanf = 0;
+            resultado_scanf = 0; // Força nova leitura
         }
     } while (resultado_scanf != 1);
     return valor;
 }
 
-float ler_float(const char *prompt) {
+float ler_float(const char *prompt, int deve_ser_positivo) {
     float valor;
     int resultado_scanf;
     do {
         printf("%s", prompt);
         resultado_scanf = scanf("%f", &valor);
         limpar_buffer_entrada();
-        if (resultado_scanf != 1)
+        if (resultado_scanf != 1) {
             printf("Entrada invalida. Por favor, digite um numero.\n");
-    } while (resultado_scanf != 1);
-    return valor;
-}
-
-float ler_float_positivo(const char *prompt) {
-    float valor;
-    int resultado_scanf;
-    do {
-        printf("%s", prompt);
-        resultado_scanf = scanf("%f", &valor);
-        limpar_buffer_entrada();
-        if (resultado_scanf != 1)
-            printf("Entrada invalida. Por favor, digite um numero.\n");
-        else if (valor <= 0) {
+        } else if (deve_ser_positivo && valor <= 0) {
             printf("Entrada invalida. O valor deve ser positivo.\n");
-            resultado_scanf = 0;
+            resultado_scanf = 0; // Força nova leitura
         }
     } while (resultado_scanf != 1);
     return valor;
@@ -166,92 +142,90 @@ void titulo(const char *titulo) {
     printf("\n");
 }
 
+// Função auxiliar para imprimir resultados
+void imprimir_resultado(const char *tipo, float valor) {
+    printf("%s: %.2f\n", tipo, valor);
+}
+
 // Submenus
 void menu_area(int opcao) {
     float a, b, c, area;
+    // O título e a limpeza da tela são tratados pela função 'submenu' que chama 'menu_area'
     switch (opcao) {
         case 1:
-            titulo("Area do Circulo");
-            a = ler_float_positivo("Diametro: ");
+            a = ler_float("Diametro: ", 1); // Usando a função consolidada
             area = circulo_area(a);
-            printf("Area: %.2f\n", area);
+            imprimir_resultado("Area", area); // Usando a função auxiliar
             break;
         case 2:
-            titulo("Area do Losango");
-            a = ler_float_positivo("Diagonal 1: ");
-            b = ler_float_positivo("Diagonal 2: ");
+            a = ler_float("Diagonal 1: ", 1);
+            b = ler_float("Diagonal 2: ", 1);
             area = losango_area(a, b);
-            printf("Area: %.2f\n", area);
+            imprimir_resultado("Area", area);
             break;
         case 3:
-            titulo("Area do Paralelogramo");
-            a = ler_float_positivo("Base: ");
-            b = ler_float_positivo("Altura: ");
+            a = ler_float("Base: ", 1);
+            b = ler_float("Altura: ", 1);
             area = paralelogramo_area(a, b);
-            printf("Area: %.2f\n", area);
+            imprimir_resultado("Area", area);
             break;
         case 4:
-            titulo("Area do Trapezio");
-            a = ler_float_positivo("Base maior: ");
-            b = ler_float_positivo("Base menor: ");
+            a = ler_float("Base maior: ", 1);
+            b = ler_float("Base menor: ", 1);
             if (b >= a) {
                 printf("Erro: Base menor deve ser menor que a base maior.\n");
                 break;
             }
-            c = ler_float_positivo("Altura: ");
+            c = ler_float("Altura: ", 1);
             area = trapezio_area(a, b, c);
-            printf("Area: %.2f\n", area);
+            imprimir_resultado("Area", area);
             break;
         case 5:
-            titulo("Area do Triangulo");
-            a = ler_float_positivo("Lado A: ");
-            b = ler_float_positivo("Lado B: ");
-            c = ler_float_positivo("Lado C: ");
+            a = ler_float("Lado A: ", 1);
+            b = ler_float("Lado B: ", 1);
+            c = ler_float("Lado C: ", 1);
             area = triangulo_lados_area(a, b, c);
             if (area < 0)
                 printf("Triangulo invalido.\n");
-            else
-                printf("%s >>> Area: %.2f\n",
+            else {
+                printf("%s >>> ",
                     (a == b && b == c) ? "Triangulo Equilatero" :
-                    (a == b || b == c || a == c) ? "Triangulo Isosceles" : "Triangulo Escaleno",
-                    area);
+                    (a == b || b == c || a == c) ? "Triangulo Isosceles" : "Triangulo Escaleno");
+                imprimir_resultado("Area", area);
+            }
             break;
         case 0: return;
         default: printf("Opcao invalida.\n");
     }
-    pausar_tela();
+    pausar_tela(); // Pausa apenas uma vez após o cálculo ou erro
 }
 
 void menu_volume(int opcao) {
     float a, b, c, vol;
     switch (opcao) {
         case 1:
-            titulo("Volume da Esfera");
-            a = ler_float_positivo("Diametro: ");
+            a = ler_float("Diametro: ", 1);
             vol = esfera_vol(a);
-            printf("Volume: %.2f\n", vol);
+            imprimir_resultado("Volume", vol);
             break;
         case 2:
-            titulo("Volume do Cone");
-            a = ler_float_positivo("Diametro da base: ");
-            b = ler_float_positivo("Altura: ");
+            a = ler_float("Diametro da base: ", 1);
+            b = ler_float("Altura: ", 1);
             vol = cone_vol(a, b);
-            printf("Volume: %.2f\n", vol);
+            imprimir_resultado("Volume", vol);
             break;
         case 3:
-            titulo("Volume do Cilindro");
-            a = ler_float_positivo("Diametro: ");
-            b = ler_float_positivo("Altura: ");
+            a = ler_float("Diametro: ", 1);
+            b = ler_float("Altura: ", 1);
             vol = cilindro_vol(a, b);
-            printf("Volume: %.2f\n", vol);
+            imprimir_resultado("Volume", vol);
             break;
         case 4:
-            titulo("Volume do Paralelepipedo");
-            a = ler_float_positivo("Comprimento: ");
-            b = ler_float_positivo("Largura: ");
-            c = ler_float_positivo("Altura: ");
+            a = ler_float("Comprimento: ", 1);
+            b = ler_float("Largura: ", 1);
+            c = ler_float("Altura: ", 1);
             vol = paralelepipedo_vol(a, b, c);
-            printf("Volume: %.2f\n", vol);
+            imprimir_resultado("Volume", vol);
             break;
         case 0: return;
         default: printf("Opcao invalida.\n");
@@ -276,8 +250,8 @@ void menu_conversao(int opcao) {
         litros_para_galoes, galoes_para_litros, kg_para_libras, libras_para_kg
     };
     if (opcao >= 1 && opcao <= 8) {
-        titulo(unidades[opcao-1][0]);
-        num = ler_float("Valor: ");
+        titulo(unidades[opcao-1][0]); // Exibe o título específico da conversão aqui
+        num = ler_float("Valor: ", 0); // Conversão não exige valor positivo necessariamente
         result = funcoes[opcao-1](num);
         printf(unidades[opcao-1][1], num, result);
         pausar_tela();
@@ -288,23 +262,28 @@ void menu_conversao(int opcao) {
 }
 
 void menu_desenho(int opcao) {
-    if (opcao == 1) {
-        titulo("Triangulo Isosceles Oco");
-        int altura = ler_int_positivo("Altura: ");
-        desenhar_triangulo_isoceles_oco(altura);
-        pausar_tela();
-    } else if (opcao == 2) {
-        titulo("Quadrado");
-        int lado = ler_int_positivo("Lado: ");
-        desenhar_quadrado_oco(lado);
-        pausar_tela();
-    } else if (opcao == 3) {
-        titulo("Circulo (aproximado)");
-        int raio = ler_int_positivo("Raio: ");
-        desenhar_circulo_oco(raio);
-        pausar_tela();
-    } else if (opcao != 0) {
-        printf("Opcao invalida.\n");
+    int valor_geometrico;
+    
+    switch (opcao) {
+        case 1:
+            titulo("Triangulo Isosceles Oco");
+            valor_geometrico = ler_int("Altura: ", 1);
+            desenhar_triangulo_isoceles_oco(valor_geometrico);
+            break;
+        case 2:
+            titulo("Quadrado");
+            valor_geometrico = ler_int("Lado: ", 1);
+            desenhar_quadrado_oco(valor_geometrico);
+            break;
+        case 3:
+            titulo("Circulo (aproximado)");
+            valor_geometrico = ler_int("Raio: ", 1);
+            desenhar_circulo_oco(valor_geometrico);
+            break;
+        case 0: return;
+        default: printf("Opcao invalida.\n"); break;
+    }
+    if (opcao != 0) { // Pausa apenas se uma opção válida (ou inválida que não seja 0) foi escolhida
         pausar_tela();
     }
 }
@@ -315,9 +294,9 @@ void submenu(const char *titulo_menu, const char *opcoes[], int num_opcoes, void
         system(LIMPAR_TELA);
         titulo(titulo_menu);
         for (int i = 0; i < num_opcoes; i++) printf("%s\n", opcoes[i]);
-        opcao = ler_int("Opcao: ");
-        system(LIMPAR_TELA);
-        funcao(opcao);
+        opcao = ler_int("Opcao: ", 0); // Não exige opção positiva
+        system(LIMPAR_TELA); // Limpa a tela antes de exibir o resultado do submenu
+        funcao(opcao); // Chama a função de menu (area, volume, etc.)
     } while (opcao != 0);
 }
 
@@ -358,8 +337,7 @@ int main() {
         system(LIMPAR_TELA);
         titulo("MENU PRINCIPAL");
         for (int i = 0; i < 5; i++) printf("%s\n", menu_principal[i]);
-        opcao = ler_int("Opcao: ");
-        system(LIMPAR_TELA);
+        opcao = ler_int("Opcao: ", 0); // Não exige opção positiva
         switch (opcao) {
             case 1: submenu("Area de Figuras Planas", opcoes_area, 6, menu_area); break;
             case 2: submenu("Volume de Solidos Geometricos", opcoes_volume, 5, menu_volume); break;
