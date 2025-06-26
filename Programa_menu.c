@@ -17,7 +17,7 @@ const double PI = M_PI;
 #define LIMPAR_TELA "clear"
 #endif
 
-// ==================== UTILITARIOS ====================
+// ==================== FUNÇÕES UTILITÁRIAS ====================
 void limpar_buffer_entrada() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
@@ -93,7 +93,7 @@ float galoes_para_litros(float num) { return num / 0.264172f; }
 float kg_para_libras(float num) { return num * 2.20462262f; }
 float libras_para_kg(float num) { return num / 2.20462262f; }
 
-// ==================== DESENHO ====================
+// ==================== FUNÇÕES DE DESENHO ====================
 void desenhar_triangulo_isoceles_oco(int altura) {
     int i, j;
     for (i = 1; i < altura; i++) {
@@ -135,6 +135,7 @@ void desenhar_circulo_oco(int raio) {
 }
 
 // ==================== INTERFACE ====================
+// Função auxiliar para imprimir o título do menu
 void titulo(const char *titulo) {
     for (int i = 0; i < 80; i++) printf("-");
     printf("\n\n\t\t********** %s **********\n\n", titulo);
@@ -145,6 +146,19 @@ void titulo(const char *titulo) {
 // Função auxiliar para imprimir resultados
 void imprimir_resultado(const char *tipo, float valor) {
     printf("%s: %.2f\n", tipo, valor);
+}
+
+// Função para exibir o submenu e chamar a função correspondente
+void submenu(const char *titulo_menu, const char *opcoes[], int num_opcoes, void (*funcao)(int)) {
+    int opcao;
+    do {
+        system(LIMPAR_TELA);
+        titulo(titulo_menu);
+        for (int i = 0; i < num_opcoes; i++) printf("%s\n", opcoes[i]);
+        opcao = ler_int("Opcao: ", 0); // Não exige opção positiva
+        system(LIMPAR_TELA); // Limpa a tela antes de exibir o resultado do submenu
+        funcao(opcao); // Chama a função de menu (area, volume, etc.)
+    } while (opcao != 0);
 }
 
 // Submenus
@@ -286,18 +300,6 @@ void menu_desenho(int opcao) {
     if (opcao != 0) { // Pausa apenas se uma opção válida (ou inválida que não seja 0) foi escolhida
         pausar_tela();
     }
-}
-
-void submenu(const char *titulo_menu, const char *opcoes[], int num_opcoes, void (*funcao)(int)) {
-    int opcao;
-    do {
-        system(LIMPAR_TELA);
-        titulo(titulo_menu);
-        for (int i = 0; i < num_opcoes; i++) printf("%s\n", opcoes[i]);
-        opcao = ler_int("Opcao: ", 0); // Não exige opção positiva
-        system(LIMPAR_TELA); // Limpa a tela antes de exibir o resultado do submenu
-        funcao(opcao); // Chama a função de menu (area, volume, etc.)
-    } while (opcao != 0);
 }
 
 // ==================== MAIN ====================
